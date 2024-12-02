@@ -1,11 +1,7 @@
 import { chain, isNil, sum } from "lodash-es";
-import path from "path";
-import { fileURLToPath } from "url";
 import { getLines, subArray } from "../lib/helpers.js";
 
-const dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const lines = getLines(`${dirname}/input.txt`);
+const lines = getLines("input.txt");
 
 const [arr1, arr2] = chain(lines)
   .reduce(
