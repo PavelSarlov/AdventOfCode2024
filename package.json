@@ -1,0 +1,28 @@
+{
+  "name": "adventofcode2023",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.54.0",
+    "eslint-config-semistandard": "^17.0.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-n": "^15.7.0",
+    "eslint-plugin-promise": "^6.1.1"
+  },
+  "dependencies": {
+    "@graph-algorithm/minimum-cut": "^2.0.0",
+    "datastructures-js": "^13.0.0",
+    "js-graph-algorithms": "^1.0.18",
+    "lodash": "^4.17.21",
+    "mathjs": "^12.2.1",
+    "nerdamer": "^1.1.13"
+  }
+}
