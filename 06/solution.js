@@ -2,13 +2,12 @@ import { getLines, sumArray } from "../lib/helpers.js";
 
 const map = getLines("input.txt").map((line) => line.split(""));
 const obst = "#";
+let guardPos;
 
-function getGuardPos(map) {
-  for (let i = 0; i < map.length; i++) {
-    for (let j = 0; j < map[i].length; j++) {
-      if (map[i][j] === "^") {
-        return [i, j];
-      }
+for (let i = 0; i < map.length; i++) {
+  for (let j = 0; j < map[i].length; j++) {
+    if (map[i][j] === "^") {
+      guardPos = [i, j];
     }
   }
 }
@@ -24,13 +23,19 @@ function nextDir(dir) {
   return (dir + 1) % directions.length;
 }
 
-function visited() {
-  let pos = getGuardPos(map);
+function visited(checkLoop) {
+  let pos = guardPos;
   let dir = 0;
   const visited = new Set();
 
   while (map[pos[0]]?.[pos[1]]) {
-    visited.add(pos.toString());
+    const entry = `${pos.toString()}${checkLoop ? `,${dir}` : ""}`;
+
+    if (checkLoop && visited.has(entry)) {
+      return true;
+    }
+
+    visited.add(entry);
 
     let next = sumArray(pos, directions[dir]);
     while (map[next[0]]?.[next[1]] === obst) {
@@ -40,11 +45,7 @@ function visited() {
     pos = next;
   }
 
-  return visited;
-}
-
-function willLoop(pos) {
-  return directions.some()
+  return checkLoop ? false : visited;
 }
 
 function part1() {
@@ -52,7 +53,14 @@ function part1() {
 }
 
 function part2() {
-  const visits = [...visited()].map(v => v.split(',').map(Number));
+  const visits = [...visited()].map((v) => v.split(",").map(Number));
+
+  return visits.filter(([x, y]) => {
+    map[x][y] = obst;
+    const loops = visited(true);
+    map[x][y] = ".";
+    return loops;
+  }).length;
 }
 
 console.log(part1());
