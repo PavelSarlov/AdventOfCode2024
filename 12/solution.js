@@ -1,7 +1,7 @@
 import { chain } from "lodash-es";
-import { getLines, sumArray } from "../lib/helpers.js";
+import { getLines, subArray, sumArray } from "../lib/helpers.js";
 
-const map = getLines("example4.txt").map((line) => line.split(""));
+const map = getLines("input.txt").map((line) => line.split(""));
 const dirs = [
   [1, 0],
   [0, 1],
@@ -45,29 +45,42 @@ function getRegionPerimeter(r) {
 }
 
 function getRegionSides(r) {
-  const outerPlots = new Set(
-    [...r]
-      .map((x) => x.split(",").map(Number))
-      .filter((plot) =>
-        dirs.some((dir) => {
-          const nextPlot = sumArray(dir, plot);
-          return !r.has(`${nextPlot}`);
-        }),
-      )
-      .map((x) => `${x}`),
-  );
-
-  const startingPlot = [...outerPlots][0].split(",").map(Number);
-  outerPlots.delete(startingPlot);
-
-  let sides = 0;
-
-  while (outerPlots.size) {}
-
-  return sides;
+  return chain([
+    ...chain([...r])
+      .reduce((m, x) => {
+        const plot = x.split(",").map(Number);
+        const [p1, p2, p3, p4] = [
+          [0, 0],
+          [1, 1],
+          [1, 0],
+          [0, 1],
+        ].map((p) => `${sumArray(p, plot)}`);
+        m.set(p1, [...(m.get(p1) ?? []), p2]);
+        m.set(p2, [...(m.get(p2) ?? []), p1]);
+        m.set(p3, [...(m.get(p3) ?? []), p4]);
+        m.set(p4, [...(m.get(p4) ?? []), p3]);
+        return m;
+      }, new Map())
+      .value()
+      .values(),
+  ])
+    .map((diags) =>
+      Number(
+        [1, 3].includes(diags.length) ||
+          (diags.length === 2 &&
+            Number(
+              (() => {
+                const [left, right] = diags.map((diag) =>
+                  diag.split(",").map(Number),
+                );
+                return `${subArray(left, right, true)}` === "2,2";
+              })(),
+            ) * 2),
+      ),
+    )
+    .sum()
+    .value();
 }
-
-getRegionSides(regions[0]);
 
 function part1() {
   return chain(regions)
@@ -76,7 +89,12 @@ function part1() {
     .value();
 }
 
-function part2() {}
+function part2() {
+  return chain(regions)
+    .map((region) => region.size * getRegionSides(region))
+    .sum()
+    .value();
+}
 
 console.log(part1());
 console.log(part2());
