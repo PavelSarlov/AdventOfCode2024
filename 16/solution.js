@@ -1,5 +1,6 @@
 import { MinHeap } from "@datastructures-js/heap";
-import { getLines, sumArray } from "../lib/helpers.js";
+import { chain } from "lodash-es";
+import { getLines, subArray, sumArray } from "../lib/helpers.js";
 
 const map = getLines("input.txt").map((l) => l.split(""));
 const dirs = [
@@ -11,11 +12,16 @@ const dirs = [
 const start = map.reduce((_, l, i) =>
   l.indexOf("S") !== -1 ? [i, l.indexOf("S")] : _,
 );
+const end = map.reduce((_, l, i) =>
+  l.indexOf("E") !== -1 ? [i, l.indexOf("E")] : _,
+);
 
 function bfs() {
   const visited = new Set();
   const pq = new MinHeap(({ points }) => points);
   pq.push({ pos: start, points: 0, dir: [0, 1] });
+
+  const distances = new Map();
 
   while (pq.size()) {
     const {
@@ -23,19 +29,17 @@ function bfs() {
       points,
       dir,
     } = pq.pop();
+    const key = [x, y, dir].toString();
 
-    if (map[x][y] === "E") {
-      return points;
-    }
-
-    if (visited.has([x, y, dir].toString())) {
+    if (visited.has(key)) {
       continue;
     }
 
-    visited.add([x, y, dir].toString());
+    distances.set(key, Math.min(points, distances.get(key) ?? Infinity));
+    visited.add(key);
 
     dirs
-      .filter((d) => sumArray(d, dir) !== [0, 0].toString())
+      .filter((d) => sumArray(d, dir).toString() !== [0, 0].toString())
       .forEach((d) => {
         const [nx, ny] = sumArray(d, [x, y]);
         if (map[nx][ny] !== "#") {
@@ -47,47 +51,65 @@ function bfs() {
         }
       });
   }
+
+  return distances;
 }
 
-function dfs({ pos: [x, y], points, dir }, visited, best, nodes) {
-  if (map[x][y] === "E" && best === points) {
-    [...visited].forEach((v) => nodes.add(v));
-    nodes.add([x, y].toString());
-    return;
+function bfsBest() {
+  const visited = new Set();
+  const q = [];
+  const best = bfs();
+  const endBest = chain(dirs)
+    .map((dir) => ({ pos: end, dir, points: best.get(`${[...end, dir]}`) }))
+    .filter(({ points }) => points)
+    .minBy(({ points }) => points)
+    .value();
+  q.push(endBest);
+
+  while (q.length) {
+    const {
+      pos: [x, y],
+      points,
+      dir,
+    } = q.shift();
+    const key = [x, y, dir].toString();
+
+    if (visited.has(key) || best.get(key) !== points) {
+      continue;
+    }
+
+    visited.add(key);
+
+    const [nx, ny] = subArray([x, y], dir);
+
+    dirs
+      .filter((d) => sumArray(d, dir).toString() !== [0, 0].toString())
+      .forEach((d) => {
+        q.push({
+          pos: [nx, ny],
+          points: points - 1,
+          dir: d,
+        });
+        q.push({
+          pos: [nx, ny],
+          points: points - 1001,
+          dir: d,
+        });
+      });
   }
 
-  visited.add([x, y].toString());
-
-  dirs
-    .filter((d) => sumArray(d, dir) !== [0, 0].toString())
-    .forEach((d) => {
-      const [nx, ny] = sumArray(d, [x, y]);
-      if (map[nx][ny] !== "#" && !visited.has([nx, ny].toString())) {
-        dfs(
-          {
-            pos: [nx, ny],
-            points: points + (d.toString() === dir.toString() ? 1 : 1001),
-            dir: d,
-          },
-          visited,
-          best,
-          nodes,
-        );
-      }
-    });
-
-  visited.delete([x, y].toString());
+  return new Set([...visited].map((v) => v.split(",").slice(0, 2).join())).size;
 }
 
 function part1() {
-  return bfs();
+  const dist = bfs();
+  return Math.min(
+    ...dirs.map((dir) => dist.get(`${[...end, dir]}`)).filter((x) => x),
+  );
 }
 
 function part2() {
-  const nodes = new Set();
-  const visited = new Set();
-  dfs({ pos: start, points: 0, dir: [0, 1] }, visited, bfs(), nodes);
-  return nodes.size;
+  return bfsBest();
 }
 
 console.log(part1());
