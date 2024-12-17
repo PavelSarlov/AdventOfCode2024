@@ -4,56 +4,56 @@ const [registers, program] = getLines("input.txt").reduce((r, l) => {
   const reg = l.match(/Register (\w): (\d+)/);
   const prog = l.match(/Program:/);
   if (reg) {
-    return [{ ...(r[0] ?? {}), [reg[1]]: Number(reg[2]) }];
+    return [{ ...(r[0] ?? {}), [reg[1]]: BigInt(reg[2]) }];
   }
   if (prog) {
-    return [...r, [...l.matchAll(/(\d)/g)].map(([x]) => Number(x))];
+    return [...r, [...l.matchAll(/(\d)/g)].map(([x]) => BigInt(x))];
   }
   return r;
 }, []);
 
 function getComboOperand(operand, regs) {
   switch (operand) {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
+    case 0n:
+    case 1n:
+    case 2n:
+    case 3n:
       return operand;
-    case 4:
+    case 4n:
       return regs.A;
-    case 5:
+    case 5n:
       return regs.B;
-    case 6:
+    case 6n:
       return regs.C;
-    case 7:
+    case 7n:
       throw "Invalid program";
   }
 }
 
 function execInstr(opcode, operand, regs) {
   switch (opcode) {
-    case 0:
-      regs.A = Number.parseInt(regs.A / 2 ** getComboOperand(operand, regs));
+    case 0n:
+      regs.A = regs.A / 2n ** getComboOperand(operand, regs);
       break;
-    case 1:
+    case 1n:
       regs.B = regs.B ^ operand;
       break;
-    case 2:
-      regs.B = getComboOperand(operand, regs) % 8;
+    case 2n:
+      regs.B = getComboOperand(operand, regs) % 8n;
       break;
-    case 3:
-      if (regs.A === 0) break;
+    case 3n:
+      if (regs.A === 0n) break;
       return operand;
-    case 4:
+    case 4n:
       regs.B = regs.B ^ regs.C;
       break;
-    case 5:
-      return `${getComboOperand(operand, regs) % 8}`;
-    case 6:
-      regs.B = Number.parseInt(regs.A / 2 ** getComboOperand(operand, regs));
+    case 5n:
+      return `${getComboOperand(operand, regs) % 8n}`;
+    case 6n:
+      regs.B = regs.A / 2n ** getComboOperand(operand, regs);
       break;
-    case 7:
-      regs.C = Number.parseInt(regs.A / 2 ** getComboOperand(operand, regs));
+    case 7n:
+      regs.C = regs.A / 2n ** getComboOperand(operand, regs);
       break;
   }
 }
@@ -63,14 +63,14 @@ function part1(regs) {
   for (let i = 0, o = 1; i < program.length - 1 && o < program.length; ) {
     const result = execInstr(program[i], program[o], regs);
 
-    if (typeof result !== "number") {
+    if (typeof result !== "bigint") {
       i += 2;
       o += 2;
       if (result) {
         out.push(result);
       }
     } else {
-      i = result;
+      i = Number(result);
       o = i + 1;
     }
   }
@@ -78,15 +78,21 @@ function part1(regs) {
 }
 
 function part2() {
-  // for (let A = 8 ** 15; A <= 8 ** 15 + 20; A++) {
-  //   console.log(A, program.join(), part1({ ...registers, A }));
-  // }
-
-  for (let i = 0; i < 8; i++) {
-    console.log(i, i ^ 5);
+  for (
+    let i = 0n, A = 0n, best = 0;
+    ;
+    i++, A = i * 8n ** 14n + BigInt("0o4165110264632")
+  ) {
+    const res = part1({ ...registers, A });
+    if (res === program.join()) {
+      return A;
+    }
+    if (res.split(",").length > best) {
+      // console.log(A, A.toString(8), best, program.length);
+      best = res.split(",").length;
+    }
   }
 }
 
 console.log(part1({ ...registers }));
-// console.log(program.length, part2().split(",").length);
-part2();
+console.log(part2());
