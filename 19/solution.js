@@ -10,39 +10,34 @@ const [towels, input] = getLines("input.txt").reduce(
   [],
 );
 const patterns = new Set(towels);
+const seen = new Map();
 
-function hasPattern(design, matched = "", seen) {
-  if (seen.has(matched)) {
-    return 0;
-  }
-  if (matched.length === design.length) {
+function hasPattern(design) {
+  if (!design) {
     return 1;
   }
-
-  seen.add(matched);
+  if (seen.has(design)) {
+    return seen.get(design);
+  }
 
   let res = 0;
   for (const p of patterns) {
-    if (design.match(new RegExp(`^${matched}${p}`))) {
-      res += hasPattern(design, `${matched}${p}`, seen);
+    if (design.startsWith(p)) {
+      res += hasPattern(design.slice(p.length));
     }
   }
+  seen.set(design, res);
   return res;
 }
 
-const possible = input
-  .map((design, i) => {
-    console.log(design.length, patterns.size, i, input.length);
-    return hasPattern(design, "", new Set());
-  })
-  .filter((x) => x);
+const possible = input.map((design) => hasPattern(design)).filter((x) => x);
 
 function part1() {
   return possible.length;
 }
 
 function part2() {
-  return;
+  return possible.reduce((sum, v) => sum + v, 0);
 }
 
 console.log(part1());
