@@ -130,13 +130,11 @@ const dirpaths = new Map();
 
 for (let i = 0; i < dirkeys.length; i++) {
   for (let j = i; j < dirkeys.length; j++) {
-    const path1 = bfsPaths(dirkeys[i], dirkeys[j], keypadDir, 1);
-    const path2 = bfsPaths("A", path1, keypadDir, 1);
-    dirpaths.set([dirkeys[i], dirkeys[j]].toString(), [path1, path2]);
+    const path = bfsPaths(dirkeys[i], dirkeys[j], keypadDir, 1);
+    dirpaths.set([dirkeys[i], dirkeys[j]].toString(), path);
 
-    const rpath1 = bfsPaths(dirkeys[j], dirkeys[i], keypadDir, 1);
-    const rpath2 = bfsPaths("A", rpath1, keypadDir, 1);
-    dirpaths.set([dirkeys[j], dirkeys[i]].toString(), [rpath1, rpath2]);
+    const rpath = bfsPaths(dirkeys[j], dirkeys[i], keypadDir, 1);
+    dirpaths.set([dirkeys[j], dirkeys[i]].toString(), rpath);
   }
 }
 
@@ -145,13 +143,11 @@ const numpaths = new Map();
 
 for (let i = 0; i < numkeys.length; i++) {
   for (let j = i; j < numkeys.length; j++) {
-    const path1 = bfsPaths(numkeys[i], numkeys[j], keypadNum, 1);
-    const path2 = bfsPaths("A", path1, keypadDir, 1);
-    numpaths.set([numkeys[i], numkeys[j]].toString(), [path1, path2]);
+    const path = bfsPaths(numkeys[i], numkeys[j], keypadNum, 1);
+    numpaths.set([numkeys[i], numkeys[j]].toString(), path);
 
-    const rpath1 = bfsPaths(numkeys[j], numkeys[i], keypadNum, 1);
-    const rpath2 = bfsPaths("A", rpath1, keypadDir, 1);
-    numpaths.set([numkeys[j], numkeys[i]].toString(), [rpath1, rpath2]);
+    const rpath = bfsPaths(numkeys[j], numkeys[i], keypadNum, 1);
+    numpaths.set([numkeys[j], numkeys[i]].toString(), rpath);
   }
 }
 
@@ -160,14 +156,14 @@ console.log(numpaths);
 
 function calcCosts(pads) {
   const padCosts = new Array(pads).fill(1).map(() => new Map());
-  [...dirpaths.entries()].forEach(([p, [p1]]) => padCosts[0].set(p, p1.length));
+  [...dirpaths.entries()].forEach(([p, p1]) => padCosts[0].set(p, p1.length));
 
   for (let i = 1; i < padCosts.length; i++) {
     const paths = i === padCosts.length - 1 ? numpaths : dirpaths;
-    for (const [p, [_, p2]] of paths) {
+    for (const [p, p1] of paths) {
       let cost = 0;
-      for (let j = 0; j < p2.length; j++) {
-        cost += padCosts[i - 1].get([p2[j - 1] ?? "A", p2[j]].toString());
+      for (let j = 0; j < p1.length; j++) {
+        cost += padCosts[i - 1].get([p1[j - 1] ?? "A", p1[j]].toString());
       }
       padCosts[i].set(p, cost);
     }
@@ -190,17 +186,22 @@ function part2() {
   console.log(costs);
 
   return chain(codes)
-    .map(
-      (code) =>
-        chain(code)
-          .reduce(
-            (sum, _, i) =>
-              sum +
-              costs[pads - 1].get([code[i - 1] ?? "A", code[i]].toString()),
-            0,
-          )
-          .value() * Number.parseInt(code),
-    )
+    .map((code) => {
+      console.log(code);
+      const cost = chain(code)
+        .reduce((sum, _, i) => {
+          console.log(
+            [code[i - 1] ?? "A", code[i]].toString(),
+            costs[pads - 1].get([code[i - 1] ?? "A", code[i]].toString()),
+          );
+          return (
+            sum + costs[pads - 1].get([code[i - 1] ?? "A", code[i]].toString())
+          );
+        }, 0)
+        .value();
+      return cost * Number.parseInt(code);
+    })
+    .sum()
     .value();
 }
 
