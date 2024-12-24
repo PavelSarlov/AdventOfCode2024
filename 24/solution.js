@@ -63,28 +63,37 @@ function getRepr(gate) {
 }
 
 function part2() {
+  const swaps = [
+    ["qnw", "z15"],
+    ["cqr", "z20"],
+    ["vkg", "z37"],
+    ["nfj", "ncd"],
+  ];
+  for (const [w1, w2] of swaps) {
+    const g1 = gates.find((g) => g[3] === w1);
+    const g2 = gates.find((g) => g[3] === w2);
+
+    [g1[3], g2[3]] = [g2[3], g1[3]];
+  }
+
   let g = calcGates();
 
   let x = getNumberForWire("x", g);
   let y = getNumberForWire("y", g);
   let z = getNumberForWire("z", g);
 
-  // const xorCounts = Object.keys(g)
-  //   .filter((gate) => !gate.match(/^(x|y)/))
-  //   .map((gate) => `${gate} ${[...getRepr(gate).matchAll(/XOR/g)].length}`)
-  //   .sort();
-  // xorCounts.forEach((x) => console.log(x));
+  // if not matching, check for inconsistencies
+  if (x + y !== z) {
+    // each bit should be result of its index + 1 XOR operations
 
-  // console.log("0" + x.toString(2));
-  // console.log("0" + y.toString(2));
-  // console.log(z.toString(2));
-  // console.log(((x + y) ^ z).toString(2));
+    const xorCounts = Object.keys(g)
+      .filter((gate) => !gate.match(/^(x|y)/))
+      .map((gate) => `${gate} ${[...getRepr(gate).matchAll(/XOR/g)].length}`)
+      .sort();
+    xorCounts.forEach((x) => console.log(x));
+  }
 
-  // each bit should be result of its index + 1 XOR operations
-
-  // qnw z15 cqr z20 vkg z37 nfj ncd
-
-  return "qnw z15 cqr z20 vkg z37 nfj ncd".split(" ").sort().join();
+  return swaps.flat().sort().join();
 }
 
 console.log(part1());
